@@ -12,7 +12,10 @@ class Cell {
   int adjacentMines;
 
   /// Creates a new cell with the specified [status], [hasMine], and [adjacentMines] properties
-  Cell({this.status = CellStatus.covered, this.hasMine = false, this.adjacentMines = 0});
+  Cell(
+      {this.status = CellStatus.covered,
+      this.hasMine = false,
+      this.adjacentMines = 0});
 }
 
 /// Represents the Minesweeper game logic and state
@@ -25,7 +28,8 @@ class MinesweeperGame extends ChangeNotifier {
   bool _gameWon;
 
   /// Creates a new Minesweeper game with the specified [rows], [cols], and [mineCount]
-  MinesweeperGame({required this.rows, required this.cols, required this.mineCount})
+  MinesweeperGame(
+      {required this.rows, required this.cols, required this.mineCount})
       : _board = List.generate(rows, (_) => List.generate(cols, (_) => Cell())),
         _gameOver = false,
         _gameWon = false {
@@ -63,7 +67,10 @@ class MinesweeperGame extends ChangeNotifier {
         int count = 0;
         for (int i = -1; i <= 1; i++) {
           for (int j = -1; j <= 1; j++) {
-            if (row + i < 0 || row + i >= rows || col + j < 0 || col + j >= cols) continue;
+            if (row + i < 0 ||
+                row + i >= rows ||
+                col + j < 0 ||
+                col + j >= cols) continue;
             if (_board[row + i][col + j].hasMine) count++;
           }
         }
@@ -75,7 +82,11 @@ class MinesweeperGame extends ChangeNotifier {
 
   /// Uncovers the cell at the specified [row] and [col]
   void uncoverCell(int row, int col) {
-    if (_gameOver || _gameWon || _board[row][col].status != CellStatus.covered) return;
+    if (_gameOver ||
+        _gameWon ||
+        _board[row][col].status != CellStatus.covered) {
+      return;
+    }
 
     _board[row][col].status = CellStatus.uncovered;
 
@@ -87,10 +98,15 @@ class MinesweeperGame extends ChangeNotifier {
     if (_board[row][col].adjacentMines == 0) {
       for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
-          if (row + i < 0 || row + i >= rows || col + j < 0 || col + j >= cols) continue;
+          if (row + i < 0 ||
+              row + i >= rows ||
+              col + j < 0 ||
+              col + j >= cols) {
+            continue;
+          }
           if (_board[row + i][col + j].status == CellStatus.covered) {
             uncoverCell(row + i, col + j);
-                   }
+          }
         }
       }
     }
@@ -113,12 +129,23 @@ class MinesweeperGame extends ChangeNotifier {
   void _checkGameWon() {
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        if (!_board[row][col].hasMine && _board[row][col].status != CellStatus.uncovered) {
+        if (!_board[row][col].hasMine &&
+            _board[row][col].status != CellStatus.uncovered) {
           return;
         }
       }
     }
 
     _gameWon = true;
+  }
+
+  /// Restarts the game by re-initializing the board
+  void restart() {
+    _board = List.generate(rows, (_) => List.generate(cols, (_) => Cell()));
+    _gameOver = false;
+    _gameWon = false;
+    _initializeMines();
+    _calculateAdjacentMines();
+    notifyListeners();
   }
 }

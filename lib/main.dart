@@ -3,27 +3,30 @@ import 'package:provider/provider.dart';
 import 'minesweeper.dart';
 
 void main() {
-  runApp(const MyApp());
-}
-
-/// Represents the root widget of the Minesweeper game application
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: ChangeNotifierProvider(
-        create: (context) => MinesweeperGame(rows: 9, cols: 9, mineCount: 10),
-        child: const MinesweeperBoard(),
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => MinesweeperGame(rows: 9, cols: 9, mineCount: 10),
+      child: MaterialApp(
+        title: 'Minesweeper',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: Builder(
+          builder: (BuildContext context) {
+            return MinesweeperBoard(
+              onGameOver: () {
+                _showGameOverDialog(context);
+              },
+            );
+          },
+        ),
       ),
-    );
-  }
+    ),
+  );
 }
 
-/// Represents the Minesweeper game board widget
 class MinesweeperBoard extends StatelessWidget {
-  const MinesweeperBoard({super.key});
+  final VoidCallback onGameOver;
+
+  const MinesweeperBoard({super.key, required this.onGameOver});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +34,12 @@ class MinesweeperBoard extends StatelessWidget {
       appBar: AppBar(title: const Text('Minesweeper')),
       body: Consumer<MinesweeperGame>(
         builder: (context, game, child) {
+          if (game.gameOver) {
+            WidgetsBinding.instance!.addPostFrameCallback((_) {
+              onGameOver(); // Use the callback here
+            });
+          }
+
           return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: game.cols,
@@ -45,17 +54,21 @@ class MinesweeperBoard extends StatelessWidget {
               return GestureDetector(
                 onTap: () {
                   game.uncoverCell(row, col);
-                  Provider.of<MinesweeperGame>(context, listen: false).notifyListeners();
+                  Provider.of<MinesweeperGame>(context, listen: false)
+                      .notifyListeners();
                 },
                 onLongPress: () {
                   game.toggleFlag(row, col);
-                  Provider.of<MinesweeperGame>(context, listen: false).notifyListeners();
+                  Provider.of<MinesweeperGame>(context, listen: false)
+                      .notifyListeners();
                 },
                 child: GridTile(
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
-                      color: cell.status == CellStatus.uncovered ? Colors.white : Colors.grey[300],
+                      color: cell.status == CellStatus.uncovered
+                          ? Colors.white
+                          : Colors.grey[300],
                     ),
                     child: Center(
                       child: _buildCellContent(cell),
@@ -70,7 +83,7 @@ class MinesweeperBoard extends StatelessWidget {
     );
   }
 
-  /// Returns the widget representing the content of the given [cell] in the Minesweeper game board
+  /// Returns the widget representing the content of the given [cell] in the Minesweeper game board.
   Widget? _buildCellContent(Cell cell) {
     if (cell.status == CellStatus.flagged) {
       return const Icon(Icons.flag, color: Colors.red);
@@ -79,13 +92,35 @@ class MinesweeperBoard extends StatelessWidget {
     if (cell.status == CellStatus.uncovered) {
       if (cell.hasMine) {
         return const Icon(Icons.error, color: Colors.red);
-      }
-
-      if (cell.adjacentMines > 0) {
-        return Text('${cell.adjacentMines}', style: const TextStyle(fontSize: 18));
+      } else if (cell.adjacentMines > 0) {
+        return Text(
+          '${cell.adjacentMines}',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        );
       }
     }
 
     return null;
   }
+}
+
+Future<void> _showGameOverDialog(BuildContext context) async {
+  return showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Game Over'),
+        content: const Text('You triggered a mine!'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Restart'),
+            onPressed: () {
+              Provider.of<MinesweeperGame>(context, listen: false).restart();
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
 }
