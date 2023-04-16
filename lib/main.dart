@@ -83,7 +83,7 @@ class MinesweeperBoard extends StatelessWidget {
     );
   }
 
-  /// Returns the widget representing the content of the given [cell] in the Minesweeper game board.
+  /// Returns the widget representing the content of the given [cell] in the Minesweeper game board
   Widget? _buildCellContent(Cell cell) {
     if (cell.status == CellStatus.flagged) {
       return const Icon(Icons.flag, color: Colors.red);
@@ -104,6 +104,7 @@ class MinesweeperBoard extends StatelessWidget {
   }
 }
 
+/// Returns the widget that shows the game over and restart option
 Future<void> _showGameOverDialog(BuildContext context) async {
   return showDialog(
     context: context,
