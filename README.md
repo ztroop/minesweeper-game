@@ -1,5 +1,5 @@
 # Minesweeper
 
-A simple implementation of Minesewwper in Dart/Flutter.
+A simple implementation of Minesweeper in Dart/Flutter.
 
 ![Demo](./assets/demo.gif)
