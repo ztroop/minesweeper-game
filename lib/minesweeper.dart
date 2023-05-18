@@ -127,16 +127,20 @@ class MinesweeperGame extends ChangeNotifier {
 
   /// Checks if the game has been won and updates the [_gameWon] property accordingly
   void _checkGameWon() {
+    int uncoveredCellsCount = 0;
+
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
         if (!_board[row][col].hasMine &&
-            _board[row][col].status != CellStatus.uncovered) {
-          return;
+            _board[row][col].status == CellStatus.uncovered) {
+          uncoveredCellsCount++;
         }
       }
     }
 
-    _gameWon = true;
+    if (uncoveredCellsCount == (rows * cols) - mineCount) {
+      _gameWon = true;
+    }
   }
 
   /// Restarts the game by re-initializing the board

@@ -15,6 +15,9 @@ void main() {
               onGameOver: () {
                 _showGameOverDialog(context);
               },
+              onGameWon: () {
+                _showGameWonDialog(context);
+              },
             );
           },
         ),
@@ -25,8 +28,10 @@ void main() {
 
 class MinesweeperBoard extends StatelessWidget {
   final VoidCallback onGameOver;
+  final VoidCallback onGameWon;
 
-  const MinesweeperBoard({super.key, required this.onGameOver});
+  const MinesweeperBoard(
+      {super.key, required this.onGameOver, required this.onGameWon});
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +40,14 @@ class MinesweeperBoard extends StatelessWidget {
       body: Consumer<MinesweeperGame>(
         builder: (context, game, child) {
           if (game.gameOver) {
-            WidgetsBinding.instance!.addPostFrameCallback((_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
               onGameOver(); // Use the callback here
+            });
+          }
+
+          if (game.gameWon) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              onGameWon(); // Use the callback here
             });
           }
 
@@ -112,6 +123,28 @@ Future<void> _showGameOverDialog(BuildContext context) async {
       return AlertDialog(
         title: const Text('Game Over'),
         content: const Text('You triggered a mine!'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Restart'),
+            onPressed: () {
+              Provider.of<MinesweeperGame>(context, listen: false).restart();
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+/// Returns the widget that shows the game won and restart option
+Future<void> _showGameWonDialog(BuildContext context) async {
+  return showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Congratulations!'),
+        content: const Text('You have won the game!'),
         actions: <Widget>[
           TextButton(
             child: const Text('Restart'),
