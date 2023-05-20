@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'minesweeper.dart';
@@ -5,22 +6,11 @@ import 'minesweeper.dart';
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (context) => MinesweeperGame(rows: 9, cols: 9, mineCount: 10),
+      create: (context) => GameSettings(),
       child: MaterialApp(
         title: 'Minesweeper',
         theme: ThemeData(primarySwatch: Colors.blue),
-        home: Builder(
-          builder: (BuildContext context) {
-            return MinesweeperBoard(
-              onGameOver: () {
-                _showGameOverDialog(context);
-              },
-              onGameWon: () {
-                _showGameWonDialog(context);
-              },
-            );
-          },
-        ),
+        home: const StartScreen(),
       ),
     ),
   );
@@ -127,7 +117,9 @@ Future<void> _showGameOverDialog(BuildContext context) async {
           TextButton(
             child: const Text('Restart'),
             onPressed: () {
-              Provider.of<MinesweeperGame>(context, listen: false).restart();
+              Provider.of<GameSettings>(context, listen: false)
+                  .currentGame
+                  .restart();
               Navigator.of(context).pop();
             },
           ),
@@ -149,7 +141,9 @@ Future<void> _showGameWonDialog(BuildContext context) async {
           TextButton(
             child: const Text('Restart'),
             onPressed: () {
-              Provider.of<MinesweeperGame>(context, listen: false).restart();
+              Provider.of<GameSettings>(context, listen: false)
+                  .currentGame
+                  .restart();
               Navigator.of(context).pop();
             },
           ),
@@ -157,4 +151,94 @@ Future<void> _showGameWonDialog(BuildContext context) async {
       );
     },
   );
+}
+
+enum GameDifficulty { easy, medium, hard }
+
+class GameSettings extends ChangeNotifier {
+  GameDifficulty _gameDifficulty = GameDifficulty.easy;
+  late MinesweeperGame _currentGame;
+
+  GameSettings() {
+    _currentGame = _createNewGame();
+  }
+
+  set gameDifficulty(GameDifficulty difficulty) {
+    _gameDifficulty = difficulty;
+    _currentGame = _createNewGame();
+    notifyListeners();
+  }
+
+  GameDifficulty get gameDifficulty => _gameDifficulty;
+
+  MinesweeperGame get currentGame => _currentGame;
+
+  MinesweeperGame _createNewGame() {
+    switch (_gameDifficulty) {
+      case GameDifficulty.easy:
+        return MinesweeperGame(rows: 9, cols: 9, mineCount: 10);
+      case GameDifficulty.medium:
+        return MinesweeperGame(rows: 16, cols: 16, mineCount: 40);
+      case GameDifficulty.hard:
+        return MinesweeperGame(rows: 30, cols: 16, mineCount: 99);
+      default:
+        return MinesweeperGame(rows: 9, cols: 9, mineCount: 10);
+    }
+  }
+}
+
+class StartScreen extends StatelessWidget {
+  const StartScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Select Difficulty')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var difficulty in GameDifficulty.values)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: ElevatedButton(
+                  child: Text(describeEnum(difficulty)),
+                  onPressed: () {
+                    Provider.of<GameSettings>(context, listen: false)
+                        .gameDifficulty = difficulty;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MinesweeperScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MinesweeperScreen extends StatelessWidget {
+  const MinesweeperScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<GameSettings>(
+      builder: (context, settings, _) =>
+          ChangeNotifierProvider<MinesweeperGame>(
+        create: (context) => settings.currentGame,
+        child: MinesweeperBoard(
+          onGameOver: () {
+            _showGameOverDialog(context);
+          },
+          onGameWon: () {
+            _showGameWonDialog(context);
+          },
+        ),
+      ),
+    );
+  }
 }
