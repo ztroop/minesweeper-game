@@ -9,7 +9,7 @@ void main() {
       create: (context) => GameSettings(),
       child: MaterialApp(
         title: 'Minesweeper',
-        theme: ThemeData(primarySwatch: Colors.blue),
+        theme: ThemeData(primarySwatch: Colors.blueGrey),
         home: const StartScreen(),
       ),
     ),
@@ -26,7 +26,7 @@ class MinesweeperBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Minesweeper')),
+      appBar: AppBar(title: const Text('Get Sweepin!')),
       body: Consumer<MinesweeperGame>(
         builder: (context, game, child) {
           if (game.gameOver) {
@@ -87,12 +87,17 @@ class MinesweeperBoard extends StatelessWidget {
   /// Returns the widget representing the content of the given [cell] in the Minesweeper game board
   Widget? _buildCellContent(Cell cell) {
     if (cell.status == CellStatus.flagged) {
-      return const Icon(Icons.flag, color: Colors.red);
+      return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Image(image: AssetImage('assets/flag.png'), fit: BoxFit.fill));
     }
 
     if (cell.status == CellStatus.uncovered) {
       if (cell.hasMine) {
-        return const Icon(Icons.error, color: Colors.red);
+        return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child:
+                Image(image: AssetImage('assets/bomb.png'), fit: BoxFit.fill));
       } else if (cell.adjacentMines > 0) {
         return Text(
           '${cell.adjacentMines}',
@@ -193,16 +198,43 @@ class StartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Select Difficulty')),
+      appBar: AppBar(title: const Text('Minesweeper')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Padding(
+                padding: EdgeInsets.symmetric(vertical: 15),
+                child: Image(
+                    image: AssetImage('assets/bomb.png'),
+                    height: 150,
+                    width: 150)),
+            const Padding(
+                padding: EdgeInsets.symmetric(vertical: 15),
+                child: Text(
+                  """To play Minesweeper, start by choosing your desired difficulty level which usually
+comes in easy, medium, and hard options. The game grid consists of covered squares,
+some of which contain hidden mines. Gameplay involves clicking a square to reveal
+what's underneath. If the square is empty, it will show a number indicating how many
+mines are in the adjacent eight squares. If it contains a mine, you lose the game.
+
+Alternatively, hold-click on a square to place a flag if you suspect there's a mine
+underneath it.
+
+The objective of the game is to uncover all squares that don't have
+mines, correctly flagging all squares containing mines.""",
+                  textAlign: TextAlign.center,
+                )),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 15),
+              child: Text('Select Difficulty',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
             for (var difficulty in GameDifficulty.values)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 5),
                 child: ElevatedButton(
-                  child: Text(describeEnum(difficulty)),
+                  child: Text(describeEnum(difficulty).toUpperCase()),
                   onPressed: () {
                     Provider.of<GameSettings>(context, listen: false)
                         .gameDifficulty = difficulty;
