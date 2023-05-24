@@ -11,6 +11,7 @@ void main() {
         title: 'Minesweeper',
         theme: ThemeData(primarySwatch: Colors.blueGrey),
         home: const StartScreen(),
+        debugShowCheckedModeBanner: false,
       ),
     ),
   );
